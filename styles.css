@@ -507,12 +507,17 @@ body {
     display: flex;
     align-items: center;
     position: relative;
-    opacity: 0;
-    animation: slideInUp 0.6s ease-out forwards;
+    opacity: 1;
+    animation: slideInUp 0.6s ease-out;
 }
 
 .timeline-item:nth-child(1) { animation-delay: 0.2s; }
 .timeline-item:nth-child(2) { animation-delay: 0.4s; }
+
+.timeline-item.dynamic {
+    opacity: 1;
+    animation: slideInUp 0.3s ease-out;
+}
 
 @keyframes slideInUp {
     from {
@@ -551,6 +556,7 @@ body {
     min-width: 120px;
     text-align: center;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    white-space: nowrap;
 }
 
 .timeline-content {
@@ -561,6 +567,8 @@ body {
     width: calc(50% - 1rem);
     border: 1px solid rgba(102, 126, 234, 0.2);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    word-wrap: break-word;
+    min-height: 80px;
 }
 
 .timeline-content:hover {
@@ -572,6 +580,14 @@ body {
     color: #667eea;
     margin-bottom: 0.5rem;
     font-size: 1.3rem;
+    word-wrap: break-word;
+}
+
+.timeline-content p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 0;
+    word-wrap: break-word;
 }
 
 /* 照片墙 */
@@ -1124,23 +1140,24 @@ body {
     }
     
     .timeline-item {
-        flex-direction: column !important;
-        align-items: flex-start;
-        padding-left: 60px;
+        flex-direction: row !important;
+        margin-left: 40px;
     }
     
     .timeline-date {
-        left: 20px !important;
-        transform: none !important;
+        left: 20px;
         position: absolute;
-        top: 0;
+        transform: translateX(-50%);
+        font-size: 0.9rem;
+        padding: 0.3rem 0.8rem;
+        min-width: 100px;
     }
     
     .timeline-content {
         width: 100%;
         margin: 0 !important;
         text-align: left !important;
-        margin-top: 3rem !important;
+        margin-top: 2rem !important;
     }
     
     .form-actions {
