@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 测试数据库连接
     testDatabaseConnection();
+    
+    console.log('页面初始化完成，开始加载数据...');
 });
 
 // 测试数据库连接
@@ -676,19 +678,28 @@ async function addTimelineEvent() {
                     content: content,
                     created_at: new Date().toISOString()
                 }
-            ]);
+            ])
+            .select(); // 添加select()以获取插入的数据
         
         if (error) {
             throw error;
         }
         
+        console.log('时间轴事件添加成功:', data);
+        
         closeTimelineForm();
         await loadTimelineEvents();
         updateStatus('connected', '时间轴事件保存成功');
         
+        // 滚动到时间轴区域
+        document.getElementById('timeline').scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+        });
+        
     } catch (error) {
         console.error('Error adding timeline event:', error);
-        updateStatus('error', '保存失败');
+        updateStatus('error', '保存失败: ' + error.message);
     }
 }
 
@@ -704,18 +715,20 @@ async function loadTimelineEvents() {
         }
         
         const timeline = document.querySelector('.timeline');
-        // 保留初始的两个时间轴项目
-        const initialItems = timeline.querySelectorAll('.timeline-item');
         
-        // 清除除了初始项目外的所有项目
+        // 清除所有动态添加的时间轴项目
         const dynamicItems = timeline.querySelectorAll('.timeline-item.dynamic');
         dynamicItems.forEach(item => item.remove());
         
-        // 添加动态时间轴事件
-        data.forEach((event, index) => {
-            const eventElement = createTimelineElement(event, index);
-            timeline.appendChild(eventElement);
-        });
+        // 添加新的动态时间轴事件
+        if (data && data.length > 0) {
+            data.forEach((event, index) => {
+                const eventElement = createTimelineElement(event, index);
+                timeline.appendChild(eventElement);
+            });
+        }
+        
+        console.log('Timeline events loaded:', data?.length || 0);
         
     } catch (error) {
         console.error('Error loading timeline events:', error);
@@ -730,16 +743,31 @@ function createTimelineElement(event, index) {
     const div = document.createElement('div');
     div.className = 'timeline-item dynamic';
     
-    const eventDate = new Date(event.event_date).toLocaleDateString('zh-CN');
+    // 格式化日期
+    const eventDate = new Date(event.event_date).toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    
+    // 确保内容不为空
+    const title = event.title || '无标题';
+    const content = event.content || '暂无描述';
     
     div.innerHTML = `
         <div class="timeline-date">${eventDate}</div>
         <div class="timeline-content">
-            <h3>${event.title}</h3>
-            <p>${event.content}</p>
+            <h3>${title}</h3>
+            <p>${content}</p>
             <button onclick="deleteTimelineEvent(${event.id})" class="delete-btn" style="margin-top: 1rem;">删除</button>
         </div>
     `;
+    
+    // 强制触发重绘以确保显示
+    setTimeout(() => {
+        div.style.opacity = '1';
+        div.style.transform = 'translateY(0)';
+    }, 50);
     
     return div;
 }
