@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>郭佳仑 ❤️ 钱海宁 - 爱的记录</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JavaScript SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- 背景装饰 -->
+    <div class="background-hearts"></div>
+    
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-title">💕 爱的记录</div>
+            <ul class="nav-menu">
+                <li><a href="#hero" class="nav-link">首页</a></li>
+                <li><a href="#about" class="nav-link">关于我们</a></li>
+                <li><a href="#timeline" class="nav-link">点点滴滴</a></li>
+                <li><a href="#photos" class="nav-link">照片墙</a></li>
+                <li><a href="#messages" class="nav-link">留言板</a></li>
+                <li><a href="#moods" class="nav-link">气鼓鼓</a></li>
+                <li><a href="#memories" class="nav-link">回忆录</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section id="hero" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">郭佳仑 ❤️ 钱海宁</h1>
+            <p class="hero-subtitle">我们的爱情故事 | 从 2023年9月26日 开始</p>
+            
+            <!-- 爱情计数器 -->
+            <div class="love-counter">
+                <div class="counter-item">
+                    <span class="counter-number" id="days">0</span>
+                    <span class="counter-label">天</span>
+                </div>
+                <div class="counter-item">
+                    <span class="counter-number" id="hours">0</span>
+                    <span class="counter-label">小时</span>
+                </div>
+                <div class="counter-item">
+                    <span class="counter-number" id="minutes">0</span>
+                    <span class="counter-label">分钟</span>
+                </div>
+                <div class="counter-item">
+                    <span class="counter-number" id="seconds">0</span>
+                    <span class="counter-label">秒</span>
+                </div>
+            </div>
+            
+            <div class="hero-actions">
+                <button onclick="scrollToSection('about')" class="modern-btn primary">了解我们</button>
+                <button onclick="scrollToSection('timeline')" class="modern-btn secondary">查看故事</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 关于我们区域 -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2 class="section-title">关于我们</h2>
+            <div class="about-content">
+                <div class="about-grid">
+                    <div class="about-card">
+                        <div class="about-avatar">
+                            <div class="avatar-placeholder">佳</div>
+                        </div>
+                        <h3>郭佳仑</h3>
+                        <p class="about-description">
+                            一个温暖的人，喜欢记录生活中的美好瞬间。
+                            相信爱情的力量，珍惜每一个平凡的日子。
+                        </p>
+                        <div class="about-tags">
+                            <span class="tag">温柔体贴</span>
+                            <span class="tag">有责任心</span>
+                            <span class="tag">幽默风趣</span>
+                        </div>
+                    </div>
+                    <div class="love-symbol">💕</div>
+                    <div class="about-card">
+                        <div class="about-avatar">
+                            <div class="avatar-placeholder">宁</div>
+                        </div>
+                        <h3>钱海宁</h3>
+                        <p class="about-description">
+                            一个可爱的女孩，拥有治愈人心的笑容。
+                            热爱生活，总能发现生活中的小确幸。
+                        </p>
+                        <div class="about-tags">
+                            <span class="tag">可爱迷人</span>
+                            <span class="tag">善解人意</span>
+                            <span class="tag">乐观开朗</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="love-story">
+                    <h3>我们的故事</h3>
+                    <p>
+                        缘分让我们在2023年9月26日相遇，从那一刻起，我们的生活就变得更加精彩。
+                        我们一起看过日出日落，一起走过春夏秋冬，一起哭过笑过。
+                        这个网站记录着我们爱情路上的点点滴滴，每一个瞬间都值得珍藏。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 点点滴滴区域（时间轴） -->
+    <section id="timeline" class="timeline-section">
+        <div class="container">
+            <h2 class="section-title">点点滴滴</h2>
+            <div class="timeline-controls">
+                <button onclick="showTimelineForm()" class="modern-btn primary">添加新的回忆</button>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">2023年9月26日</div>
+                    <div class="timeline-content">
+                        <h3>❤️ 我们开始恋爱</h3>
+                        <p>这是我们爱情故事的开始，一个美好的日子。从这一天起，我们的心紧紧相连，开始了这段美好的恋爱之旅。</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">正在进行中</div>
+                    <div class="timeline-content">
+                        <h3>💕 持续的爱情</h3>
+                        <p>每一天都在创造新的美好回忆，我们的爱情在时光中愈发深厚...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 照片墙区域 -->
+    <section id="photos" class="photos-section">
+        <div class="container">
+            <h2 class="section-title">📸 我们的照片</h2>
+            <div class="photo-upload">
+                <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                <input type="text" id="photoDescription" placeholder="为照片添加描述...记录美好瞬间">
+                <div class="photo-upload-buttons">
+                    <button onclick="document.getElementById('photoInput').click()" class="modern-btn secondary">选择照片</button>
+                    <button onclick="uploadPhoto()" class="modern-btn primary">上传照片</button>
+                </div>
+            </div>
+            <div id="photoGrid" class="photo-grid">
+                <!-- 动态加载照片 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 留言板区域 -->
+    <section id="messages" class="messages-section">
+        <div class="container">
+            <h2 class="section-title">💌 留言板</h2>
+            <div class="message-form">
+                <select id="messageAuthor" class="modern-select">
+                    <option value="">选择作者</option>
+                    <option value="郭佳仑">郭佳仑</option>
+                    <option value="钱海宁">钱海宁</option>
+                </select>
+                <textarea id="messageInput" class="modern-textarea" placeholder="写下你想说的话...留下爱的印记"></textarea>
+                <div class="form-actions">
+                    <small class="form-hint">💡 按 Ctrl+Enter 快速发送</small>
+                    <button onclick="addMessage()" class="modern-btn primary">发送留言</button>
+                </div>
+            </div>
+            <div class="messages-container">
+                <div id="messageList" class="message-list">
+                    <!-- 动态加载留言 -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 气鼓鼓模块 -->
+    <section id="moods" class="moods-section">
+        <div class="container">
+            <h2 class="section-title">😤 气鼓鼓记录</h2>
+            <p class="section-subtitle">记录我们之间的小情绪，让生气变得可爱~</p>
+            
+            <div class="mood-form">
+                <select id="moodAuthor" class="modern-select">
+                    <option value="">谁生气了？</option>
+                    <option value="郭佳仑">郭佳仑</option>
+                    <option value="钱海宁">钱海宁</option>
+                </select>
+                <select id="moodLevel" class="modern-select">
+                    <option value="">生气等级</option>
+                    <option value="😐 微微不开心">😐 微微不开心</option>
+                    <option value="😑 有点小情绪">😑 有点小情绪</option>
+                    <option value="😤 气鼓鼓">😤 气鼓鼓</option>
+                    <option value="😡 很生气">😡 很生气</option>
+                    <option value="🤬 超级生气">🤬 超级生气</option>
+                </select>
+                <textarea id="moodReason" class="modern-textarea" placeholder="为什么生气呢？说出来就不气了~"></textarea>
+                <textarea id="moodSolution" class="modern-textarea" placeholder="怎么哄好的呢？分享和解的方法~"></textarea>
+                <div class="form-actions">
+                    <button onclick="addMood()" class="modern-btn primary">记录气鼓鼓</button>
+                </div>
+            </div>
+            
+            <div id="moodList" class="mood-list">
+                <!-- 动态加载气鼓鼓记录 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 美好回忆区域 -->
+    <section id="memories" class="memories-section">
+        <div class="container">
+            <h2 class="section-title">💝 美好回忆</h2>
+            <div class="memory-form">
+                <div class="memory-form-grid">
+                    <input type="text" id="memoryTitle" class="modern-input" placeholder="回忆标题">
+                    <input type="date" id="memoryDate" class="modern-input">
+                </div>
+                <textarea id="memoryContent" class="modern-textarea" placeholder="描述这个美好的回忆...让时光永远记住这一刻"></textarea>
+                <button onclick="addMemory()" class="modern-btn primary">添加回忆</button>
+            </div>
+            <div class="memories-grid">
+                <div id="memoryList" class="memory-list">
+                    <!-- 动态加载回忆 -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 时间轴表单模态框 -->
+    <div id="timelineModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTimelineForm()">&times;</span>
+            <h3>添加新的时间轴记录</h3>
+            <input type="date" id="timelineDate" class="modern-input" placeholder="选择日期">
+            <input type="text" id="timelineTitle" class="modern-input" placeholder="事件标题">
+            <textarea id="timelineContent" class="modern-textarea" placeholder="描述这个特别的时刻..."></textarea>
+            <button onclick="addTimelineEvent()" class="modern-btn primary">添加到时间轴</button>
+        </div>
+    </div>
+
+    <!-- 底部 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 郭佳仑 ❤️ 钱海宁 | 爱的记录永远继续...</p>
+            <div class="footer-actions">
+                <button onclick="exportData()" class="modern-btn outline">导出数据备份</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 状态指示器 -->
+    <div id="statusIndicator" class="status-indicator">
+        <span id="statusText">连接中...</span>
+    </div>
+
+    <!-- 加载 JavaScript -->
+    <script src="script-supabase.js"></script>
+</body>
+</html> 

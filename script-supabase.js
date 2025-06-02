@@ -1,0 +1,822 @@
+// Supabase 配置
+const SUPABASE_URL = 'https://mkeabsltkvfilsushefl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZWFic2x0a3ZmaWxzdXNoZWZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4MzY5MjMsImV4cCI6MjA2NDQxMjkyM30.mlJqJPr_nmMZWyZ5JCkwZZyB-Z6vpuVhG091FJomrqw';
+
+// 初始化 Supabase 客户端
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// 全局变量
+let statusIndicator;
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    statusIndicator = document.getElementById('statusIndicator');
+    statusIndicator.innerHTML = '<span id="statusText">正在连接数据库...</span>';
+    
+    // 初始化各个模块
+    initializeLoveCounter();
+    loadMessages();
+    loadPhotos();
+    loadMemories();
+    loadTimelineEvents();
+    loadMoods();
+    
+    // 设置键盘快捷键
+    setupKeyboardShortcuts();
+    
+    // 测试数据库连接
+    testDatabaseConnection();
+});
+
+// 测试数据库连接
+async function testDatabaseConnection() {
+    try {
+        const { data, error } = await supabase
+            .from('messages')
+            .select('count')
+            .limit(1);
+        
+        if (error) {
+            updateStatus('error', '数据库连接失败');
+            console.error('Database connection error:', error);
+        } else {
+            updateStatus('connected', '数据库连接成功');
+        }
+    } catch (error) {
+        updateStatus('error', '连接错误');
+        console.error('Connection error:', error);
+    }
+}
+
+// 更新状态指示器
+function updateStatus(type, message) {
+    const statusIndicator = document.getElementById('statusIndicator');
+    const statusText = document.getElementById('statusText');
+    
+    statusIndicator.className = `status-indicator ${type}`;
+    statusText.textContent = message;
+    
+    // 3秒后如果是成功状态，自动隐藏
+    if (type === 'connected') {
+        setTimeout(() => {
+            statusIndicator.style.opacity = '0.7';
+        }, 3000);
+    }
+}
+
+// 平滑滚动到指定区域
+function scrollToSection(sectionId) {
+    document.getElementById(sectionId).scrollIntoView({
+        behavior: 'smooth'
+    });
+}
+
+// 初始化爱情计数器
+function initializeLoveCounter() {
+    const startDate = new Date('2023-09-26T19:00:00');
+    
+    function updateCounter() {
+        const now = new Date();
+        const diff = now - startDate;
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        document.getElementById('days').textContent = days;
+        document.getElementById('hours').textContent = hours;
+        document.getElementById('minutes').textContent = minutes;
+        document.getElementById('seconds').textContent = seconds;
+    }
+    
+    updateCounter();
+    setInterval(updateCounter, 1000);
+}
+
+// 设置键盘快捷键
+function setupKeyboardShortcuts() {
+    // Ctrl+Enter 发送留言
+    document.getElementById('messageInput').addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') {
+            addMessage();
+        }
+    });
+}
+
+// 留言板功能
+async function addMessage() {
+    const author = document.getElementById('messageAuthor').value;
+    const content = document.getElementById('messageInput').value.trim();
+    
+    if (!author) {
+        alert('请选择作者！');
+        return;
+    }
+    
+    if (!content) {
+        alert('请输入留言内容！');
+        return;
+    }
+    
+    try {
+        updateStatus('connecting', '正在保存留言...');
+        
+        const { data, error } = await supabase
+            .from('messages')
+            .insert([
+                {
+                    author: author,
+                    content: content,
+                    created_at: new Date().toISOString()
+                }
+            ]);
+        
+        if (error) {
+            throw error;
+        }
+        
+        // 清空表单
+        document.getElementById('messageAuthor').value = '';
+        document.getElementById('messageInput').value = '';
+        
+        // 重新加载留言
+        await loadMessages();
+        updateStatus('connected', '留言保存成功');
+        
+    } catch (error) {
+        console.error('Error adding message:', error);
+        updateStatus('error', '留言保存失败');
+    }
+}
+
+async function loadMessages() {
+    try {
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            throw error;
+        }
+        
+        const messageList = document.getElementById('messageList');
+        messageList.innerHTML = '';
+        
+        data.forEach(message => {
+            const messageElement = createMessageElement(message);
+            messageList.appendChild(messageElement);
+        });
+        
+    } catch (error) {
+        console.error('Error loading messages:', error);
+        updateStatus('error', '加载留言失败');
+    }
+}
+
+function createMessageElement(message) {
+    const div = document.createElement('div');
+    div.className = 'message-item';
+    
+    const date = new Date(message.created_at).toLocaleString('zh-CN');
+    
+    div.innerHTML = `
+        <div class="message-header">
+            <span class="message-author">${message.author}</span>
+            <div>
+                <span class="message-time">${date}</span>
+                <button onclick="deleteMessage(${message.id})" class="delete-btn">删除</button>
+            </div>
+        </div>
+        <div class="message-content">${message.content}</div>
+    `;
+    
+    return div;
+}
+
+async function deleteMessage(id) {
+    if (!confirm('确定要删除这条留言吗？')) return;
+    
+    try {
+        updateStatus('connecting', '正在删除留言...');
+        
+        const { error } = await supabase
+            .from('messages')
+            .delete()
+            .eq('id', id);
+        
+        if (error) {
+            throw error;
+        }
+        
+        await loadMessages();
+        updateStatus('connected', '留言删除成功');
+        
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        updateStatus('error', '删除失败');
+    }
+}
+
+// 照片墙功能
+async function uploadPhoto() {
+    const fileInput = document.getElementById('photoInput');
+    const description = document.getElementById('photoDescription').value.trim();
+    
+    if (!fileInput.files[0]) {
+        alert('请选择照片！');
+        return;
+    }
+    
+    if (!description) {
+        alert('请为照片添加描述！');
+        return;
+    }
+    
+    try {
+        updateStatus('connecting', '正在上传照片...');
+        
+        const file = fileInput.files[0];
+        const fileName = `photo_${Date.now()}_${file.name}`;
+        
+        // 上传文件到 Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('photos')
+            .upload(fileName, file);
+        
+        if (uploadError) {
+            throw uploadError;
+        }
+        
+        // 获取公共 URL
+        const { data: urlData } = supabase.storage
+            .from('photos')
+            .getPublicUrl(fileName);
+        
+        // 保存照片信息到数据库
+        const { data, error } = await supabase
+            .from('photos')
+            .insert([
+                {
+                    url: urlData.publicUrl,
+                    description: description,
+                    filename: fileName,
+                    created_at: new Date().toISOString()
+                }
+            ]);
+        
+        if (error) {
+            throw error;
+        }
+        
+        // 清空表单
+        fileInput.value = '';
+        document.getElementById('photoDescription').value = '';
+        
+        // 重新加载照片
+        await loadPhotos();
+        updateStatus('connected', '照片上传成功');
+        
+    } catch (error) {
+        console.error('Error uploading photo:', error);
+        updateStatus('error', '照片上传失败');
+    }
+}
+
+async function loadPhotos() {
+    try {
+        const { data, error } = await supabase
+            .from('photos')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            throw error;
+        }
+        
+        const photoGrid = document.getElementById('photoGrid');
+        photoGrid.innerHTML = '';
+        
+        data.forEach(photo => {
+            const photoElement = createPhotoElement(photo);
+            photoGrid.appendChild(photoElement);
+        });
+        
+    } catch (error) {
+        console.error('Error loading photos:', error);
+        updateStatus('error', '加载照片失败');
+    }
+}
+
+function createPhotoElement(photo) {
+    const div = document.createElement('div');
+    div.className = 'photo-item';
+    
+    const date = new Date(photo.created_at).toLocaleDateString('zh-CN');
+    
+    div.innerHTML = `
+        <img src="${photo.url}" alt="${photo.description}" onclick="viewPhoto('${photo.url}', '${photo.description}')">
+        <div class="photo-info">
+            <span class="photo-date">${date}</span>
+            <div class="photo-description">${photo.description}</div>
+            <button onclick="deletePhoto(${photo.id}, '${photo.filename}')" class="delete-btn">删除</button>
+        </div>
+    `;
+    
+    return div;
+}
+
+function viewPhoto(url, description) {
+    const modal = document.createElement('div');
+    modal.className = 'photo-modal';
+    modal.onclick = () => modal.remove();
+    
+    modal.innerHTML = `
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <img src="${url}" alt="${description}">
+            <p>${description}</p>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+async function deletePhoto(id, filename) {
+    if (!confirm('确定要删除这张照片吗？')) return;
+    
+    try {
+        updateStatus('connecting', '正在删除照片...');
+        
+        // 删除 Storage 中的文件
+        const { error: storageError } = await supabase.storage
+            .from('photos')
+            .remove([filename]);
+        
+        if (storageError) {
+            console.warn('Storage delete warning:', storageError);
+        }
+        
+        // 删除数据库记录
+        const { error } = await supabase
+            .from('photos')
+            .delete()
+            .eq('id', id);
+        
+        if (error) {
+            throw error;
+        }
+        
+        await loadPhotos();
+        updateStatus('connected', '照片删除成功');
+        
+    } catch (error) {
+        console.error('Error deleting photo:', error);
+        updateStatus('error', '删除失败');
+    }
+}
+
+// 气鼓鼓模块功能
+async function addMood() {
+    const author = document.getElementById('moodAuthor').value;
+    const level = document.getElementById('moodLevel').value;
+    const reason = document.getElementById('moodReason').value.trim();
+    const solution = document.getElementById('moodSolution').value.trim();
+    
+    if (!author) {
+        alert('请选择是谁生气了！');
+        return;
+    }
+    
+    if (!level) {
+        alert('请选择生气等级！');
+        return;
+    }
+    
+    if (!reason) {
+        alert('请说明生气的原因！');
+        return;
+    }
+    
+    try {
+        updateStatus('connecting', '正在保存气鼓鼓记录...');
+        
+        const { data, error } = await supabase
+            .from('moods')
+            .insert([
+                {
+                    author: author,
+                    level: level,
+                    reason: reason,
+                    solution: solution || '还在想办法哄...',
+                    created_at: new Date().toISOString()
+                }
+            ]);
+        
+        if (error) {
+            throw error;
+        }
+        
+        // 清空表单
+        document.getElementById('moodAuthor').value = '';
+        document.getElementById('moodLevel').value = '';
+        document.getElementById('moodReason').value = '';
+        document.getElementById('moodSolution').value = '';
+        
+        // 重新加载气鼓鼓记录
+        await loadMoods();
+        updateStatus('connected', '气鼓鼓记录保存成功');
+        
+    } catch (error) {
+        console.error('Error adding mood:', error);
+        updateStatus('error', '保存失败');
+    }
+}
+
+async function loadMoods() {
+    try {
+        const { data, error } = await supabase
+            .from('moods')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            throw error;
+        }
+        
+        const moodList = document.getElementById('moodList');
+        moodList.innerHTML = '';
+        
+        data.forEach(mood => {
+            const moodElement = createMoodElement(mood);
+            moodList.appendChild(moodElement);
+        });
+        
+    } catch (error) {
+        console.error('Error loading moods:', error);
+        // 如果表不存在，静默处理
+        if (error.code !== 'PGRST116') {
+            updateStatus('error', '加载气鼓鼓记录失败');
+        }
+    }
+}
+
+function createMoodElement(mood) {
+    const div = document.createElement('div');
+    div.className = 'mood-item';
+    
+    const date = new Date(mood.created_at).toLocaleDateString('zh-CN');
+    
+    div.innerHTML = `
+        <div class="mood-header">
+            <span class="mood-author">${mood.author}</span>
+            <div>
+                <span class="mood-date">${date}</span>
+                <button onclick="deleteMood(${mood.id})" class="delete-btn">删除</button>
+            </div>
+        </div>
+        <div class="mood-level">${mood.level}</div>
+        <div class="mood-reason">${mood.reason}</div>
+        <div class="mood-solution">${mood.solution}</div>
+    `;
+    
+    return div;
+}
+
+async function deleteMood(id) {
+    if (!confirm('确定要删除这条气鼓鼓记录吗？')) return;
+    
+    try {
+        updateStatus('connecting', '正在删除记录...');
+        
+        const { error } = await supabase
+            .from('moods')
+            .delete()
+            .eq('id', id);
+        
+        if (error) {
+            throw error;
+        }
+        
+        await loadMoods();
+        updateStatus('connected', '记录删除成功');
+        
+    } catch (error) {
+        console.error('Error deleting mood:', error);
+        updateStatus('error', '删除失败');
+    }
+}
+
+// 美好回忆功能
+async function addMemory() {
+    const title = document.getElementById('memoryTitle').value.trim();
+    const date = document.getElementById('memoryDate').value;
+    const content = document.getElementById('memoryContent').value.trim();
+    
+    if (!title) {
+        alert('请输入回忆标题！');
+        return;
+    }
+    
+    if (!date) {
+        alert('请选择日期！');
+        return;
+    }
+    
+    if (!content) {
+        alert('请描述这个美好的回忆！');
+        return;
+    }
+    
+    try {
+        updateStatus('connecting', '正在保存回忆...');
+        
+        const { data, error } = await supabase
+            .from('memories')
+            .insert([
+                {
+                    title: title,
+                    memory_date: date,
+                    content: content,
+                    created_at: new Date().toISOString()
+                }
+            ]);
+        
+        if (error) {
+            throw error;
+        }
+        
+        // 清空表单
+        document.getElementById('memoryTitle').value = '';
+        document.getElementById('memoryDate').value = '';
+        document.getElementById('memoryContent').value = '';
+        
+        // 重新加载回忆
+        await loadMemories();
+        updateStatus('connected', '回忆保存成功');
+        
+    } catch (error) {
+        console.error('Error adding memory:', error);
+        updateStatus('error', '保存失败');
+    }
+}
+
+async function loadMemories() {
+    try {
+        const { data, error } = await supabase
+            .from('memories')
+            .select('*')
+            .order('memory_date', { ascending: false });
+        
+        if (error) {
+            throw error;
+        }
+        
+        const memoryList = document.getElementById('memoryList');
+        memoryList.innerHTML = '';
+        
+        data.forEach(memory => {
+            const memoryElement = createMemoryElement(memory);
+            memoryList.appendChild(memoryElement);
+        });
+        
+    } catch (error) {
+        console.error('Error loading memories:', error);
+        updateStatus('error', '加载回忆失败');
+    }
+}
+
+function createMemoryElement(memory) {
+    const div = document.createElement('div');
+    div.className = 'memory-card';
+    
+    const memoryDate = new Date(memory.memory_date).toLocaleDateString('zh-CN');
+    
+    div.innerHTML = `
+        <div class="memory-header">
+            <h3 class="memory-title">${memory.title}</h3>
+            <div class="memory-actions">
+                <span class="memory-date">${memoryDate}</span>
+                <button onclick="deleteMemory(${memory.id})" class="delete-btn">删除</button>
+            </div>
+        </div>
+        <div class="memory-content">${memory.content}</div>
+    `;
+    
+    return div;
+}
+
+async function deleteMemory(id) {
+    if (!confirm('确定要删除这个回忆吗？')) return;
+    
+    try {
+        updateStatus('connecting', '正在删除回忆...');
+        
+        const { error } = await supabase
+            .from('memories')
+            .delete()
+            .eq('id', id);
+        
+        if (error) {
+            throw error;
+        }
+        
+        await loadMemories();
+        updateStatus('connected', '回忆删除成功');
+        
+    } catch (error) {
+        console.error('Error deleting memory:', error);
+        updateStatus('error', '删除失败');
+    }
+}
+
+// 时间轴功能
+function showTimelineForm() {
+    document.getElementById('timelineModal').style.display = 'block';
+}
+
+function closeTimelineForm() {
+    document.getElementById('timelineModal').style.display = 'none';
+    // 清空表单
+    document.getElementById('timelineDate').value = '';
+    document.getElementById('timelineTitle').value = '';
+    document.getElementById('timelineContent').value = '';
+}
+
+async function addTimelineEvent() {
+    const date = document.getElementById('timelineDate').value;
+    const title = document.getElementById('timelineTitle').value.trim();
+    const content = document.getElementById('timelineContent').value.trim();
+    
+    if (!date) {
+        alert('请选择日期！');
+        return;
+    }
+    
+    if (!title) {
+        alert('请输入事件标题！');
+        return;
+    }
+    
+    if (!content) {
+        alert('请描述这个特别的时刻！');
+        return;
+    }
+    
+    try {
+        updateStatus('connecting', '正在保存时间轴事件...');
+        
+        const { data, error } = await supabase
+            .from('timeline_events')
+            .insert([
+                {
+                    event_date: date,
+                    title: title,
+                    content: content,
+                    created_at: new Date().toISOString()
+                }
+            ]);
+        
+        if (error) {
+            throw error;
+        }
+        
+        closeTimelineForm();
+        await loadTimelineEvents();
+        updateStatus('connected', '时间轴事件保存成功');
+        
+    } catch (error) {
+        console.error('Error adding timeline event:', error);
+        updateStatus('error', '保存失败');
+    }
+}
+
+async function loadTimelineEvents() {
+    try {
+        const { data, error } = await supabase
+            .from('timeline_events')
+            .select('*')
+            .order('event_date', { ascending: true });
+        
+        if (error) {
+            throw error;
+        }
+        
+        const timeline = document.querySelector('.timeline');
+        // 保留初始的两个时间轴项目
+        const initialItems = timeline.querySelectorAll('.timeline-item');
+        
+        // 清除除了初始项目外的所有项目
+        const dynamicItems = timeline.querySelectorAll('.timeline-item.dynamic');
+        dynamicItems.forEach(item => item.remove());
+        
+        // 添加动态时间轴事件
+        data.forEach((event, index) => {
+            const eventElement = createTimelineElement(event, index);
+            timeline.appendChild(eventElement);
+        });
+        
+    } catch (error) {
+        console.error('Error loading timeline events:', error);
+        // 如果表不存在，静默处理
+        if (error.code !== 'PGRST116') {
+            updateStatus('error', '加载时间轴失败');
+        }
+    }
+}
+
+function createTimelineElement(event, index) {
+    const div = document.createElement('div');
+    div.className = 'timeline-item dynamic';
+    
+    const eventDate = new Date(event.event_date).toLocaleDateString('zh-CN');
+    
+    div.innerHTML = `
+        <div class="timeline-date">${eventDate}</div>
+        <div class="timeline-content">
+            <h3>${event.title}</h3>
+            <p>${event.content}</p>
+            <button onclick="deleteTimelineEvent(${event.id})" class="delete-btn" style="margin-top: 1rem;">删除</button>
+        </div>
+    `;
+    
+    return div;
+}
+
+async function deleteTimelineEvent(id) {
+    if (!confirm('确定要删除这个时间轴事件吗？')) return;
+    
+    try {
+        updateStatus('connecting', '正在删除事件...');
+        
+        const { error } = await supabase
+            .from('timeline_events')
+            .delete()
+            .eq('id', id);
+        
+        if (error) {
+            throw error;
+        }
+        
+        await loadTimelineEvents();
+        updateStatus('connected', '事件删除成功');
+        
+    } catch (error) {
+        console.error('Error deleting timeline event:', error);
+        updateStatus('error', '删除失败');
+    }
+}
+
+// 数据导出功能
+async function exportData() {
+    try {
+        updateStatus('connecting', '正在导出数据...');
+        
+        // 获取所有数据
+        const [messagesResult, photosResult, memoriesResult, moodsResult, timelineResult] = await Promise.all([
+            supabase.from('messages').select('*').order('created_at', { ascending: false }),
+            supabase.from('photos').select('*').order('created_at', { ascending: false }),
+            supabase.from('memories').select('*').order('memory_date', { ascending: false }),
+            supabase.from('moods').select('*').order('created_at', { ascending: false }),
+            supabase.from('timeline_events').select('*').order('event_date', { ascending: true })
+        ]);
+        
+        const exportData = {
+            messages: messagesResult.data || [],
+            photos: photosResult.data || [],
+            memories: memoriesResult.data || [],
+            moods: moodsResult.data || [],
+            timeline_events: timelineResult.data || [],
+            export_date: new Date().toISOString(),
+            export_note: '郭佳仑 ❤️ 钱海宁 - 爱的记录数据备份'
+        };
+        
+        // 创建下载链接
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `love-memory-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        updateStatus('connected', '数据导出成功');
+        
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        updateStatus('error', '数据导出失败');
+    }
+}
+
+// 点击模态框外部关闭
+window.onclick = function(event) {
+    const modal = document.getElementById('timelineModal');
+    if (event.target === modal) {
+        closeTimelineForm();
+    }
+} 
