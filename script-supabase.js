@@ -37,31 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 显示调试信息
 function showDollDebugInfo(message) {
-    // 只在控制台显示调试信息，不在页面上显示
-    console.log('调试信息:', message.replace(/<[^>]*>/g, '')); // 移除HTML标签
-    
-    // 如果需要在页面显示，取消下面的注释
-    /*
-    const debugInfo = document.getElementById('dollDebugInfo');
-    const debugText = document.getElementById('dollDebugText');
-    
-    if (debugInfo && debugText) {
-        // 如果显示成功信息，3秒后自动隐藏
-        if (message.includes('✅') && message.includes('系统就绪')) {
-            debugInfo.style.display = 'block';
-            debugText.innerHTML = message + ' <button onclick="hideDollDebugInfo()" style="margin-left: 10px; padding: 2px 8px; background: rgba(255,255,255,0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">隐藏</button>';
-            
-            // 3秒后自动隐藏
-            setTimeout(() => {
-                hideDollDebugInfo();
-            }, 3000);
-        } else {
-            // 错误信息显示关闭按钮
-            debugInfo.style.display = 'block';
-            debugText.innerHTML = message + ' <button onclick="hideDollDebugInfo()" style="margin-left: 10px; padding: 2px 8px; background: rgba(255,255,255,0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">关闭</button>';
-        }
-    }
-    */
+    // 完全禁用调试信息显示
+    console.log('调试信息:', message.replace(/<[^>]*>/g, '')); // 只在控制台显示
 }
 
 // 隐藏调试信息
@@ -918,17 +895,14 @@ async function addDoll() {
         
         const file = fileInput.files[0];
         
-        // 清理文件名：移除中文字符、空格和特殊字符
-        const cleanFileName = file.name
-            .replace(/[\u4e00-\u9fff]/g, '') // 移除中文字符
-            .replace(/\s+/g, '_') // 空格替换为下划线
-            .replace(/[^a-zA-Z0-9._-]/g, '') // 移除其他特殊字符
-            .toLowerCase(); // 转为小写
+        // 获取文件扩展名
+        const fileExtension = file.name.split('.').pop().toLowerCase();
         
-        const fileName = `doll_${Date.now()}_${cleanFileName}`;
+        // 生成完全安全的文件名：只使用时间戳和扩展名
+        const fileName = `doll_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExtension}`;
         
         console.log('原始文件名:', file.name);
-        console.log('清理后文件名:', fileName);
+        console.log('安全文件名:', fileName);
         
         // 上传文件到 Supabase Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
