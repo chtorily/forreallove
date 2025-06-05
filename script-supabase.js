@@ -892,9 +892,18 @@ async function addDoll() {
         updateStatus('connecting', '正在添加娃娃...');
         
         const file = fileInput.files[0];
-        const fileName = `doll_${Date.now()}_${file.name}`;
         
-        console.log('开始上传娃娃照片:', fileName);
+        // 清理文件名：移除中文字符、空格和特殊字符
+        const cleanFileName = file.name
+            .replace(/[\u4e00-\u9fff]/g, '') // 移除中文字符
+            .replace(/\s+/g, '_') // 空格替换为下划线
+            .replace(/[^a-zA-Z0-9._-]/g, '') // 移除其他特殊字符
+            .toLowerCase(); // 转为小写
+        
+        const fileName = `doll_${Date.now()}_${cleanFileName}`;
+        
+        console.log('原始文件名:', file.name);
+        console.log('清理后文件名:', fileName);
         
         // 上传文件到 Supabase Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
