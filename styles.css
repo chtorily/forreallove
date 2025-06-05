@@ -1279,7 +1279,7 @@ body {
 
 .doll-form-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr;
     gap: 1rem;
     margin-bottom: 1rem;
 }
@@ -1385,17 +1385,6 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.doll-price {
-    background: linear-gradient(135deg, #00b894, #00cec9);
-    color: white;
-    padding: 0.4rem 0.8rem;
-    border-radius: 15px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    min-width: 60px;
-    text-align: center;
 }
 
 .doll-date {
