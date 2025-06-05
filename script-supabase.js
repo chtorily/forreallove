@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadMemories();
     loadTimelineEvents();
     loadMoods();
+    loadDolls();
     
     // 设置键盘快捷键
     setupKeyboardShortcuts();
@@ -796,18 +797,238 @@ async function deleteTimelineEvent(id) {
     }
 }
 
-// 数据导出功能
+// 我们的娃（史迪仔展板）功能
+async function addDoll() {
+    const name = document.getElementById('dollName').value.trim();
+    const purchaseDate = document.getElementById('dollPurchaseDate').value;
+    const price = document.getElementById('dollPrice').value;
+    const description = document.getElementById('dollDescription').value.trim();
+    const fileInput = document.getElementById('dollImageInput');
+    
+    if (!name) {
+        alert('请输入娃娃名称！');
+        return;
+    }
+    
+    if (!purchaseDate) {
+        alert('请选择购入日期！');
+        return;
+    }
+    
+    if (!fileInput.files[0]) {
+        alert('请选择娃娃照片！');
+        return;
+    }
+    
+    try {
+        updateStatus('connecting', '正在添加娃娃...');
+        
+        const file = fileInput.files[0];
+        const fileName = `doll_${Date.now()}_${file.name}`;
+        
+        // 上传文件到 Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('dolls')
+            .upload(fileName, file);
+        
+        if (uploadError) {
+            throw uploadError;
+        }
+        
+        // 获取公共 URL
+        const { data: urlData } = supabase.storage
+            .from('dolls')
+            .getPublicUrl(fileName);
+        
+        // 保存娃娃信息到数据库
+        const { data, error } = await supabase
+            .from('dolls')
+            .insert([
+                {
+                    name: name,
+                    purchase_date: purchaseDate,
+                    price: price ? parseFloat(price) : null,
+                    description: description || '可爱的史迪仔娃娃',
+                    image_url: urlData.publicUrl,
+                    filename: fileName,
+                    created_at: new Date().toISOString()
+                }
+            ]);
+        
+        if (error) {
+            throw error;
+        }
+        
+        // 清空表单
+        document.getElementById('dollName').value = '';
+        document.getElementById('dollPurchaseDate').value = '';
+        document.getElementById('dollPrice').value = '';
+        document.getElementById('dollDescription').value = '';
+        fileInput.value = '';
+        
+        // 重新加载娃娃
+        await loadDolls();
+        updateStatus('connected', '娃娃添加成功');
+        
+        // 滚动到娃娃展板区域
+        document.getElementById('dolls').scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+        });
+        
+    } catch (error) {
+        console.error('Error adding doll:', error);
+        updateStatus('error', '添加娃娃失败: ' + error.message);
+    }
+}
+
+async function loadDolls() {
+    try {
+        const { data, error } = await supabase
+            .from('dolls')
+            .select('*')
+            .order('purchase_date', { ascending: true }); // 按购入时间顺序排列
+        
+        if (error) {
+            throw error;
+        }
+        
+        const dollGrid = document.getElementById('dollGrid');
+        dollGrid.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+            // 显示空状态
+            dollGrid.innerHTML = `
+                <div class="doll-empty-state">
+                    <h3>🧸 还没有收藏娃娃</h3>
+                    <p>快来添加你们的第一个史迪仔娃娃吧！</p>
+                </div>
+            `;
+            return;
+        }
+        
+        data.forEach((doll, index) => {
+            const dollElement = createDollElement(doll, index + 1);
+            dollGrid.appendChild(dollElement);
+        });
+        
+        console.log('Dolls loaded:', data.length);
+        
+    } catch (error) {
+        console.error('Error loading dolls:', error);
+        // 如果表不存在，静默处理
+        if (error.code !== 'PGRST116') {
+            updateStatus('error', '加载娃娃失败');
+        }
+    }
+}
+
+function createDollElement(doll, order) {
+    const div = document.createElement('div');
+    div.className = 'doll-card';
+    
+    const purchaseDate = new Date(doll.purchase_date).toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    
+    const price = doll.price ? `¥${doll.price}` : '未设价格';
+    const description = doll.description || '可爱的史迪仔娃娃';
+    
+    div.innerHTML = `
+        <div class="doll-image-container">
+            <img src="${doll.image_url}" alt="${doll.name}" onclick="viewDoll('${doll.image_url}', '${doll.name}', '${purchaseDate}', '${price}', '${description}')">
+            <div class="doll-purchase-badge">${purchaseDate}</div>
+        </div>
+        <div class="doll-info">
+            <div class="doll-header">
+                <h3 class="doll-name">${doll.name}</h3>
+                <div class="doll-actions">
+                    <span class="doll-price">${price}</span>
+                    <button onclick="deleteDoll(${doll.id}, '${doll.filename}')" class="delete-btn">删除</button>
+                </div>
+            </div>
+            <div class="doll-date">${purchaseDate}</div>
+            <div class="doll-description">${description}</div>
+            <div class="doll-stats">
+                <span class="doll-order">第 ${order} 个娃娃</span>
+                <span style="color: #74b9ff; font-size: 0.8rem;">🧸 史迪仔家族</span>
+            </div>
+        </div>
+    `;
+    
+    return div;
+}
+
+function viewDoll(imageUrl, name, purchaseDate, price, description) {
+    const modal = document.createElement('div');
+    modal.className = 'doll-modal';
+    modal.onclick = () => modal.remove();
+    
+    modal.innerHTML = `
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <img src="${imageUrl}" alt="${name}">
+            <div class="doll-modal-info">
+                <h3>${name}</h3>
+                <p><strong>购入日期：</strong>${purchaseDate}</p>
+                <p><strong>价格：</strong>${price}</p>
+                <p><strong>描述：</strong>${description}</p>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+async function deleteDoll(id, filename) {
+    if (!confirm('确定要删除这个娃娃吗？删除后无法恢复！')) return;
+    
+    try {
+        updateStatus('connecting', '正在删除娃娃...');
+        
+        // 删除 Storage 中的文件
+        const { error: storageError } = await supabase.storage
+            .from('dolls')
+            .remove([filename]);
+        
+        if (storageError) {
+            console.warn('Storage delete warning:', storageError);
+        }
+        
+        // 删除数据库记录
+        const { error } = await supabase
+            .from('dolls')
+            .delete()
+            .eq('id', id);
+        
+        if (error) {
+            throw error;
+        }
+        
+        await loadDolls();
+        updateStatus('connected', '娃娃删除成功');
+        
+    } catch (error) {
+        console.error('Error deleting doll:', error);
+        updateStatus('error', '删除失败');
+    }
+}
+
+// 导出数据时包含娃娃数据
 async function exportData() {
     try {
         updateStatus('connecting', '正在导出数据...');
         
         // 获取所有数据
-        const [messagesResult, photosResult, memoriesResult, moodsResult, timelineResult] = await Promise.all([
+        const [messagesResult, photosResult, memoriesResult, moodsResult, timelineResult, dollsResult] = await Promise.all([
             supabase.from('messages').select('*').order('created_at', { ascending: false }),
             supabase.from('photos').select('*').order('created_at', { ascending: false }),
             supabase.from('memories').select('*').order('memory_date', { ascending: false }),
             supabase.from('moods').select('*').order('created_at', { ascending: false }),
-            supabase.from('timeline_events').select('*').order('event_date', { ascending: true })
+            supabase.from('timeline_events').select('*').order('event_date', { ascending: true }),
+            supabase.from('dolls').select('*').order('purchase_date', { ascending: true })
         ]);
         
         const exportData = {
@@ -816,8 +1037,9 @@ async function exportData() {
             memories: memoriesResult.data || [],
             moods: moodsResult.data || [],
             timeline_events: timelineResult.data || [],
+            dolls: dollsResult.data || [],
             export_date: new Date().toISOString(),
-            export_note: '郭佳仑 ❤️ 钱海宁 - 爱的记录数据备份'
+            export_note: '郭佳仑 ❤️ 钱海宁 - 爱的记录数据备份（包含娃娃收藏）'
         };
         
         // 创建下载链接
