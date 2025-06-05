@@ -13,6 +13,10 @@ document.addEventListener('DOMContentLoaded', function() {
     statusIndicator = document.getElementById('statusIndicator');
     statusIndicator.innerHTML = '<span id="statusText">正在连接数据库...</span>';
     
+    console.log('=== 爱的记录网站初始化开始 ===');
+    console.log('Supabase URL:', SUPABASE_URL);
+    console.log('当前时间:', new Date().toLocaleString());
+    
     // 初始化各个模块
     initializeLoveCounter();
     loadMessages();
@@ -28,12 +32,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // 测试数据库连接
     testDatabaseConnection();
     
-    console.log('页面初始化完成，开始加载数据...');
+    console.log('=== 页面初始化完成 ===');
 });
+
+// 显示调试信息
+function showDollDebugInfo(message) {
+    const debugInfo = document.getElementById('dollDebugInfo');
+    const debugText = document.getElementById('dollDebugText');
+    
+    if (debugInfo && debugText) {
+        debugInfo.style.display = 'block';
+        debugText.innerHTML = message;
+        console.log('调试信息:', message);
+    }
+}
 
 // 测试数据库连接
 async function testDatabaseConnection() {
     try {
+        showDollDebugInfo('正在检查数据库连接...');
+        
         // 测试消息表连接
         const { data, error } = await supabase
             .from('messages')
@@ -42,6 +60,7 @@ async function testDatabaseConnection() {
         
         if (error) {
             updateStatus('error', '数据库连接失败');
+            showDollDebugInfo(`数据库连接失败: ${error.message}`);
             console.error('Database connection error:', error);
             return;
         }
@@ -56,13 +75,18 @@ async function testDatabaseConnection() {
             if (dollsError) {
                 console.warn('娃娃表不存在或无法访问:', dollsError);
                 if (dollsError.code === 'PGRST116') {
+                    showDollDebugInfo('❌ 娃娃表(dolls)不存在，请先创建数据库表！<br>参考文档中的建表SQL语句');
                     console.log('需要创建dolls表');
+                } else {
+                    showDollDebugInfo(`❌ 娃娃表访问错误: ${dollsError.message}`);
                 }
             } else {
                 console.log('娃娃表连接正常');
+                showDollDebugInfo('✅ 娃娃表连接正常');
             }
         } catch (e) {
             console.warn('娃娃表检查失败:', e);
+            showDollDebugInfo(`❌ 娃娃表检查失败: ${e.message}`);
         }
         
         // 测试Storage bucket是否存在
@@ -71,22 +95,27 @@ async function testDatabaseConnection() {
             
             if (bucketError) {
                 console.warn('Storage访问失败:', bucketError);
+                showDollDebugInfo(`❌ Storage访问失败: ${bucketError.message}`);
             } else {
                 const dollsBucket = buckets.find(bucket => bucket.name === 'dolls');
                 if (dollsBucket) {
                     console.log('娃娃存储桶存在');
+                    showDollDebugInfo('✅ 娃娃存储桶存在，系统就绪！');
                 } else {
                     console.warn('需要创建dolls存储桶');
+                    showDollDebugInfo('❌ 需要创建dolls存储桶<br>请在Supabase Dashboard的Storage中创建"dolls" bucket');
                 }
             }
         } catch (e) {
             console.warn('Storage检查失败:', e);
+            showDollDebugInfo(`❌ Storage检查失败: ${e.message}`);
         }
         
         updateStatus('connected', '数据库连接成功');
         
     } catch (error) {
         updateStatus('error', '连接错误');
+        showDollDebugInfo(`❌ 连接错误: ${error.message}`);
         console.error('Connection error:', error);
     }
 }
