@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // 测试数据库连接
 async function testDatabaseConnection() {
     try {
+        // 测试消息表连接
         const { data, error } = await supabase
             .from('messages')
             .select('count')
@@ -42,9 +43,48 @@ async function testDatabaseConnection() {
         if (error) {
             updateStatus('error', '数据库连接失败');
             console.error('Database connection error:', error);
-        } else {
-            updateStatus('connected', '数据库连接成功');
+            return;
         }
+        
+        // 测试娃娃表是否存在
+        try {
+            const { data: dollsData, error: dollsError } = await supabase
+                .from('dolls')
+                .select('count')
+                .limit(1);
+            
+            if (dollsError) {
+                console.warn('娃娃表不存在或无法访问:', dollsError);
+                if (dollsError.code === 'PGRST116') {
+                    console.log('需要创建dolls表');
+                }
+            } else {
+                console.log('娃娃表连接正常');
+            }
+        } catch (e) {
+            console.warn('娃娃表检查失败:', e);
+        }
+        
+        // 测试Storage bucket是否存在
+        try {
+            const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+            
+            if (bucketError) {
+                console.warn('Storage访问失败:', bucketError);
+            } else {
+                const dollsBucket = buckets.find(bucket => bucket.name === 'dolls');
+                if (dollsBucket) {
+                    console.log('娃娃存储桶存在');
+                } else {
+                    console.warn('需要创建dolls存储桶');
+                }
+            }
+        } catch (e) {
+            console.warn('Storage检查失败:', e);
+        }
+        
+        updateStatus('connected', '数据库连接成功');
+        
     } catch (error) {
         updateStatus('error', '连接错误');
         console.error('Connection error:', error);
@@ -801,7 +841,6 @@ async function deleteTimelineEvent(id) {
 async function addDoll() {
     const name = document.getElementById('dollName').value.trim();
     const purchaseDate = document.getElementById('dollPurchaseDate').value;
-    const price = document.getElementById('dollPrice').value;
     const description = document.getElementById('dollDescription').value.trim();
     const fileInput = document.getElementById('dollImageInput');
     
@@ -826,19 +865,26 @@ async function addDoll() {
         const file = fileInput.files[0];
         const fileName = `doll_${Date.now()}_${file.name}`;
         
+        console.log('开始上传娃娃照片:', fileName);
+        
         // 上传文件到 Supabase Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from('dolls')
             .upload(fileName, file);
         
         if (uploadError) {
+            console.error('Storage upload error:', uploadError);
             throw uploadError;
         }
+        
+        console.log('照片上传成功:', uploadData);
         
         // 获取公共 URL
         const { data: urlData } = supabase.storage
             .from('dolls')
             .getPublicUrl(fileName);
+        
+        console.log('获取照片URL:', urlData.publicUrl);
         
         // 保存娃娃信息到数据库
         const { data, error } = await supabase
@@ -847,7 +893,6 @@ async function addDoll() {
                 {
                     name: name,
                     purchase_date: purchaseDate,
-                    price: price ? parseFloat(price) : null,
                     description: description || '可爱的史迪仔娃娃',
                     image_url: urlData.publicUrl,
                     filename: fileName,
@@ -856,13 +901,15 @@ async function addDoll() {
             ]);
         
         if (error) {
+            console.error('Database insert error:', error);
             throw error;
         }
+        
+        console.log('娃娃信息保存成功:', data);
         
         // 清空表单
         document.getElementById('dollName').value = '';
         document.getElementById('dollPurchaseDate').value = '';
-        document.getElementById('dollPrice').value = '';
         document.getElementById('dollDescription').value = '';
         fileInput.value = '';
         
@@ -884,19 +931,30 @@ async function addDoll() {
 
 async function loadDolls() {
     try {
+        console.log('开始加载娃娃数据...');
+        
         const { data, error } = await supabase
             .from('dolls')
             .select('*')
             .order('purchase_date', { ascending: true }); // 按购入时间顺序排列
         
         if (error) {
+            console.error('Load dolls error:', error);
             throw error;
         }
         
+        console.log('娃娃数据加载结果:', data);
+        
         const dollGrid = document.getElementById('dollGrid');
+        if (!dollGrid) {
+            console.error('找不到dollGrid元素');
+            return;
+        }
+        
         dollGrid.innerHTML = '';
         
         if (!data || data.length === 0) {
+            console.log('没有娃娃数据，显示空状态');
             // 显示空状态
             dollGrid.innerHTML = `
                 <div class="doll-empty-state">
@@ -907,18 +965,35 @@ async function loadDolls() {
             return;
         }
         
+        console.log(`开始渲染${data.length}个娃娃`);
+        
         data.forEach((doll, index) => {
             const dollElement = createDollElement(doll, index + 1);
             dollGrid.appendChild(dollElement);
         });
         
-        console.log('Dolls loaded:', data.length);
+        console.log('娃娃渲染完成');
         
     } catch (error) {
         console.error('Error loading dolls:', error);
-        // 如果表不存在，静默处理
-        if (error.code !== 'PGRST116') {
-            updateStatus('error', '加载娃娃失败');
+        // 如果表不存在，显示提示信息
+        const dollGrid = document.getElementById('dollGrid');
+        if (dollGrid) {
+            if (error.code === 'PGRST116') {
+                dollGrid.innerHTML = `
+                    <div class="doll-empty-state">
+                        <h3>🛠️ 数据库表未创建</h3>
+                        <p>请先在数据库中创建dolls表和dolls存储桶</p>
+                    </div>
+                `;
+            } else {
+                dollGrid.innerHTML = `
+                    <div class="doll-empty-state">
+                        <h3>❌ 加载失败</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
         }
     }
 }
@@ -933,19 +1008,17 @@ function createDollElement(doll, order) {
         day: 'numeric'
     });
     
-    const price = doll.price ? `¥${doll.price}` : '未设价格';
     const description = doll.description || '可爱的史迪仔娃娃';
     
     div.innerHTML = `
         <div class="doll-image-container">
-            <img src="${doll.image_url}" alt="${doll.name}" onclick="viewDoll('${doll.image_url}', '${doll.name}', '${purchaseDate}', '${price}', '${description}')">
+            <img src="${doll.image_url}" alt="${doll.name}" onclick="viewDoll('${doll.image_url}', '${doll.name}', '${purchaseDate}', '${description}')">
             <div class="doll-purchase-badge">${purchaseDate}</div>
         </div>
         <div class="doll-info">
             <div class="doll-header">
                 <h3 class="doll-name">${doll.name}</h3>
                 <div class="doll-actions">
-                    <span class="doll-price">${price}</span>
                     <button onclick="deleteDoll(${doll.id}, '${doll.filename}')" class="delete-btn">删除</button>
                 </div>
             </div>
@@ -961,7 +1034,7 @@ function createDollElement(doll, order) {
     return div;
 }
 
-function viewDoll(imageUrl, name, purchaseDate, price, description) {
+function viewDoll(imageUrl, name, purchaseDate, description) {
     const modal = document.createElement('div');
     modal.className = 'doll-modal';
     modal.onclick = () => modal.remove();
@@ -973,7 +1046,6 @@ function viewDoll(imageUrl, name, purchaseDate, price, description) {
             <div class="doll-modal-info">
                 <h3>${name}</h3>
                 <p><strong>购入日期：</strong>${purchaseDate}</p>
-                <p><strong>价格：</strong>${price}</p>
                 <p><strong>描述：</strong>${description}</p>
             </div>
         </div>
