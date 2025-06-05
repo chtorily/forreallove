@@ -22,6 +22,7 @@
                 <li><a href="#about" class="nav-link">关于我们</a></li>
                 <li><a href="#timeline" class="nav-link">点点滴滴</a></li>
                 <li><a href="#photos" class="nav-link">照片墙</a></li>
+                <li><a href="#dolls" class="nav-link">我们的娃</a></li>
                 <li><a href="#messages" class="nav-link">留言板</a></li>
                 <li><a href="#moods" class="nav-link">气鼓鼓</a></li>
                 <li><a href="#memories" class="nav-link">回忆录</a></li>
@@ -152,6 +153,33 @@
             </div>
             <div id="photoGrid" class="photo-grid">
                 <!-- 动态加载照片 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 我们的娃（史迪仔展板）区域 -->
+    <section id="dolls" class="dolls-section">
+        <div class="container">
+            <h2 class="section-title">🧸 我们的娃</h2>
+            <p class="section-subtitle">记录我们收藏的每一个史迪仔娃娃，见证我们的爱情成长</p>
+            
+            <div class="doll-form">
+                <div class="doll-form-grid">
+                    <input type="text" id="dollName" class="modern-input" placeholder="娃娃名称（例如：史迪仔公仔）">
+                    <input type="date" id="dollPurchaseDate" class="modern-input" title="购入日期">
+                    <input type="number" id="dollPrice" class="modern-input" placeholder="价格（元）" step="0.01" min="0">
+                </div>
+                <input type="file" id="dollImageInput" accept="image/*" style="display: none;">
+                <textarea id="dollDescription" class="modern-textarea" placeholder="描述这个娃娃的特别之处...它有什么故事呢？"></textarea>
+                <div class="doll-upload-actions">
+                    <button onclick="document.getElementById('dollImageInput').click()" class="modern-btn secondary">选择娃娃照片</button>
+                    <button onclick="addDoll()" class="modern-btn primary">添加新娃娃</button>
+                </div>
+            </div>
+            
+            <!-- 娃娃展板网格 -->
+            <div id="dollGrid" class="doll-grid">
+                <!-- 动态加载娃娃 -->
             </div>
         </div>
     </section>
