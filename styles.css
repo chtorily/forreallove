@@ -1238,4 +1238,347 @@ body {
 .memory-card,
 .mood-item {
     animation: fadeInUp 0.6s ease-out;
+}
+
+/* 我们的娃（史迪仔展板）区域 */
+.dolls-section {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 50%, #6c5ce7 100%);
+    color: white;
+    position: relative;
+}
+
+.dolls-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: -1;
+}
+
+.dolls-section .section-title {
+    color: white;
+    -webkit-text-fill-color: white;
+}
+
+.doll-form {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 3rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 3rem;
+}
+
+.doll-form-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.doll-upload-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+/* 娃娃网格布局 */
+.doll-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+/* 娃娃卡片样式 */
+.doll-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.doll-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #74b9ff, #0984e3, #6c5ce7);
+    border-radius: 20px 20px 0 0;
+}
+
+.doll-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+}
+
+.doll-image-container {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f1f2f6, #ddd);
+}
+
+.doll-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.doll-card:hover img {
+    transform: scale(1.1);
+}
+
+.doll-purchase-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(116, 185, 255, 0.9);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.doll-info {
+    padding: 1.5rem;
+    color: #333;
+}
+
+.doll-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.doll-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2d3436;
+    margin: 0;
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.doll-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.doll-price {
+    background: linear-gradient(135deg, #00b894, #00cec9);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-width: 60px;
+    text-align: center;
+}
+
+.doll-date {
+    color: #74b9ff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.doll-date::before {
+    content: '📅';
+    font-size: 1rem;
+}
+
+.doll-description {
+    color: #636e72;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    max-height: 3.6em;
+    overflow: hidden;
+    position: relative;
+}
+
+.doll-description::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 30px;
+    height: 1.2em;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.95));
+}
+
+.doll-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(116, 185, 255, 0.2);
+}
+
+.doll-order {
+    background: rgba(116, 185, 255, 0.1);
+    color: #74b9ff;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* 娃娃删除按钮特殊样式 */
+.doll-card .delete-btn {
+    background: linear-gradient(135deg, #fd79a8, #e84393);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.doll-card .delete-btn:hover {
+    background: linear-gradient(135deg, #e84393, #d63031);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(232, 67, 147, 0.4);
+}
+
+/* 空状态样式 */
+.doll-empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.doll-empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.doll-empty-state p {
+    font-size: 1.1rem;
+    opacity: 0.7;
+}
+
+/* 娃娃模态框 */
+.doll-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+.doll-modal .modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 90%;
+    max-height: 90%;
+    position: relative;
+    overflow: auto;
+}
+
+.doll-modal img {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+}
+
+.doll-modal-info {
+    text-align: center;
+    color: #333;
+}
+
+.doll-modal-info h3 {
+    color: #74b9ff;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.doll-modal-info p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .doll-form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .doll-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .doll-upload-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .doll-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .doll-actions {
+        align-self: flex-end;
+    }
+    
+    .doll-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .doll-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .doll-image-container {
+        height: 200px;
+    }
+    
+    .doll-info {
+        padding: 1rem;
+    }
 } 
