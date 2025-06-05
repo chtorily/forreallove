@@ -37,13 +37,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 显示调试信息
 function showDollDebugInfo(message) {
+    // 只在控制台显示调试信息，不在页面上显示
+    console.log('调试信息:', message.replace(/<[^>]*>/g, '')); // 移除HTML标签
+    
+    // 如果需要在页面显示，取消下面的注释
+    /*
     const debugInfo = document.getElementById('dollDebugInfo');
     const debugText = document.getElementById('dollDebugText');
     
     if (debugInfo && debugText) {
-        debugInfo.style.display = 'block';
-        debugText.innerHTML = message;
-        console.log('调试信息:', message);
+        // 如果显示成功信息，3秒后自动隐藏
+        if (message.includes('✅') && message.includes('系统就绪')) {
+            debugInfo.style.display = 'block';
+            debugText.innerHTML = message + ' <button onclick="hideDollDebugInfo()" style="margin-left: 10px; padding: 2px 8px; background: rgba(255,255,255,0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">隐藏</button>';
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                hideDollDebugInfo();
+            }, 3000);
+        } else {
+            // 错误信息显示关闭按钮
+            debugInfo.style.display = 'block';
+            debugText.innerHTML = message + ' <button onclick="hideDollDebugInfo()" style="margin-left: 10px; padding: 2px 8px; background: rgba(255,255,255,0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">关闭</button>';
+        }
+    }
+    */
+}
+
+// 隐藏调试信息
+function hideDollDebugInfo() {
+    const debugInfo = document.getElementById('dollDebugInfo');
+    if (debugInfo) {
+        debugInfo.style.display = 'none';
     }
 }
 
